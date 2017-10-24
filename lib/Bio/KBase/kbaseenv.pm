@@ -6,6 +6,7 @@ use Bio::KBase::utilities;
 our $ws_client = undef;
 our $ga_client = undef;
 our $ac_client = undef;
+our $gfu_client = undef;
 our $data_file_client = undef;
 our $objects_created = [];
 
@@ -100,6 +101,18 @@ sub ws_client {
 #				);
 	}
 	return $ws_client;
+}
+
+sub gfu_client {
+	my($parameters) = @_;
+	$parameters = Bio::KBase::utilities::args($parameters,[],{
+		refresh => 0
+	});
+	if ($parameters->{refresh} == 1 || !defined($gfu_client)) {
+		require "GenomeFileUtil/GenomeFileUtilClient.pm";
+		$gfu_client = new GenomeFileUtil::GenomeFileUtilClient(Bio::KBase::utilities::utilconf("call_back_url"));
+	}
+	return $gfu_client;
 }
 
 sub ga_client {

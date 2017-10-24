@@ -154,7 +154,7 @@ sub util_get_contigs {
 }
 
 sub annotate {
-	my ($self,$parameters) = @_;	
+	my ($self,$parameters) = @_;
 	my $oldfunchash = {};
 	#Creating default genome object
 	my $inputgenome = {
@@ -227,7 +227,6 @@ sub annotate {
 		}
 	}
 	
-  	my $gaserv = Bio::KBase::GenomeAnnotation::GenomeAnnotationImpl->new();
   	my $workflow = {stages => []};
 	my $extragenecalls = "";
 	if (defined($parameters->{call_features_rRNA_SEED}) && $parameters->{call_features_rRNA_SEED} == 1)	{
@@ -512,6 +511,7 @@ sub annotate {
 		}
 	}
 	# Runs, the annotation, comment out if you dont have the reference files
+	my $gaserv = Bio::KBase::GenomeAnnotation::GenomeAnnotationImpl->new();
 	$genome = $gaserv->run_pipeline($inputgenome, $workflow);
 
 	delete $genome->{contigs};
@@ -754,25 +754,15 @@ sub annotate {
 
 	#print Bio::KBase::utilities::to_json($contigobj,1));
 	#print Bio::KBase::utilities::to_json($genome,1);
-	my $gaout = Bio::KBase::kbaseenv::ga_client()->save_one_genome_v1({
+	my $ret = Bio::KBase::kbaseenv::gfu_client()->save_one_genome({
 		workspace => $parameters->{workspace},
         name => $parameters->{output_genome},
         data => $genome,
-        provenance => [{
-			"time" => DateTime->now()->datetime()."+0000",
-			service_ver => $self->util_version(),
-			service => "RAST_SDK",
-			method => Bio::KBase::utilities::method(),
-			method_params => [$parameters],
-			input_ws_objects => [],
-			resolved_ws_objects => [],
-			intermediate_incoming => [],
-			intermediate_outgoing => []
-		}],
         hidden => 0
 	});
+	my $out_ref = $ret->{info}->[6]."/".$ret->{info}->[0]."/".$ret->{info}->[4];
 	Bio::KBase::kbaseenv::add_object_created({
-		"ref" => $gaout->{info}->[6]."/".$gaout->{info}->[0]."/".$gaout->{info}->[4],
+		"ref" => $out_ref,
 		"description" => "Annotated genome"
 	});
 	Bio::KBase::utilities::print_report_message({
@@ -780,7 +770,7 @@ sub annotate {
 		append => 0,
 		html => 1
 	});
-	return {"ref" => $gaout->{info}->[6]."/".$gaout->{info}->[0]."/".$gaout->{info}->[4]};
+	return {"ref" => $out_ref};
 }
 #END_HEADER
 
